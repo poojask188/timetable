@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Future Focus Timetable</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --lav:#c4b5fd;--lav-light:#ede9fe;--lav-dark:#7c3aed;
+  --pink:#f9a8d4;--pink-light:#fce7f3;--pink-dark:#be185d;
+  --blue:#93c5fd;--blue-light:#dbeafe;--blue-dark:#1d4ed8;
+  --mint:#6ee7b7;--mint-light:#d1fae5;--mint-dark:#065f46;
+  --amber:#fcd34d;--amber-light:#fef3c7;--amber-dark:#92400e;
+  --bg:#faf8ff;--card:#ffffff;
+  --text:#4b4569;--muted:#9992b4;--border:rgba(167,139,250,0.2);
+  --accent1:#7c3aed;--accent2:#be185d;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Nunito',sans-serif;background:#e9e0ff;display:flex;align-items:center;justify-content:center}
+.phone-frame{width:390px;height:844px;background:var(--bg);border-radius:44px;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(124,58,237,0.3),0 0 0 1px rgba(124,58,237,0.1);display:flex;flex-direction:column}
+.phone-notch{width:120px;height:32px;background:#1a1a2e;border-radius:0 0 20px 20px;margin:0 auto;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:50}
+
+/* SCROLLABLE CONTENT */
+.screens-wrap{flex:1;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding-bottom:90px;padding-top:0}
+.screen.active{display:block}
+.screen::-webkit-scrollbar{display:none}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes wiggle{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0.35)}50%{box-shadow:0 0 0 8px rgba(124,58,237,0)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes flicker{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.1) rotate(4deg)}}
+@keyframes confettiFall{to{transform:translateY(900px) rotate(720deg);opacity:0}}
+@keyframes ringPulse{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes dropIn{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* HEADER */
+.header{padding:48px 20px 18px;background:linear-gradient(160deg,#ede9fe 0%,#fce7f3 55%,#dbeafe 100%);position:relative;overflow:hidden;flex-shrink:0}
+.header::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;background:radial-gradient(circle,rgba(196,181,253,0.45) 0%,transparent 70%);border-radius:50%}
+.header::after{content:'';position:absolute;bottom:-25px;left:10px;width:120px;height:120px;background:radial-gradient(circle,rgba(249,168,212,0.35) 0%,transparent 70%);border-radius:50%}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+.greeting{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:2px}
+.header-title{font-size:22px;font-weight:900;color:var(--lav-dark);line-height:1.2}
+.mascot-big{font-size:42px;animation:bounce 2s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(124,58,237,0.25))}
+.date-badge{background:rgba(255,255,255,0.85);border:1.5px solid rgba(196,181,253,0.5);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:800;color:var(--lav-dark);margin-top:10px;display:inline-block;position:relative;z-index:1}
+
+/* THEME BAR */
+.theme-bar{display:flex;gap:8px;padding:10px 16px;background:rgba(255,255,255,0.7);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.theme-bar::-webkit-scrollbar{display:none}
+.theme-pill{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0;border:2px solid transparent;transition:all 0.2s;font-family:'Nunito',sans-serif}
+.tp-lav{background:#ede9fe;color:#7c3aed;border-color:#c4b5fd}
+.tp-pink{background:#fce7f3;color:#be185d;border-color:#f9a8d4}
+.tp-blue{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+
+/* SECTION */
+.section{padding:14px 16px 0}
+.section-title{font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+
+/* CARDS */
+.card{background:var(--card);border-radius:20px;padding:16px;border:1px solid var(--border);margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 2px 16px rgba(196,181,253,0.12)}
+
+/* COUNTDOWN */
+.countdown-card{background:linear-gradient(135deg,#7c3aed,#be185d);border:none!important;color:white;text-align:center;padding:20px 16px}
+.cd-label{font-size:12px;font-weight:700;opacity:0.8;margin-bottom:3px}
+.cd-time{font-size:40px;font-weight:900;font-family:'Quicksand',sans-serif;letter-spacing:3px}
+.cd-name{font-size:13px;font-weight:700;opacity:0.88;margin-top:4px}
+.cd-bunny{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:44px;opacity:0.25}
+
+/* RINGS */
+.ring-row{display:flex;justify-content:space-around;align-items:center}
+.ring-item{display:flex;flex-direction:column;align-items:center;gap:5px}
+.ring-pct{font-size:12px;font-weight:800}
+.ring-lbl{font-size:10px;font-weight:700;color:var(--muted)}
+
+/* WATER */
+.drop-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.drop{font-size:24px;cursor:pointer;transition:all 0.2s;filter:grayscale(1) opacity(0.35)}
+.drop.lit{filter:none;animation:dropIn 0.3s ease}
+.water-sub{font-size:12px;font-weight:700;color:var(--blue-dark);margin-top:8px}
+
+/* STREAK */
+.streak-row{display:flex;align-items:center;justify-content:space-between}
+.streak-num{font-size:48px;font-weight:900;color:var(--lav-dark);font-family:'Quicksand',sans-serif;line-height:1}
+.streak-flame{font-size:44px;animation:flicker 0.9s ease-in-out infinite alternate}
+.streak-sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.badge-sticker{background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:14px;padding:5px 12px;font-size:11px;font-weight:900;color:white;display:inline-block;margin-top:6px}
+.bar-wrap{background:var(--lav-light);border-radius:20px;height:9px;overflow:hidden;margin-top:8px}
+.bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--lav),var(--pink));transition:width 1s ease}
+.bar-nums{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-top:5px}
+
+/* QUOTE */
+.quote-card{background:linear-gradient(135deg,#fce7f3,#ede9fe);text-align:center;padding:22px}
+.quote-emoji{font-size:30px;display:block;margin-bottom:8px}
+.quote-txt{font-size:15px;font-weight:800;color:var(--lav-dark);line-height:1.55}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;gap:3px;background:var(--lav-light);color:var(--lav-dark);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:800}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+
+/* SCHEDULE */
+.sched-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:16px;margin-bottom:7px;cursor:pointer;transition:all 0.15s;position:relative;animation:fadeUp 0.3s ease both}
+.sched-item:active{transform:scale(0.97)}
+.sched-item.done-item{opacity:0.55}
+.sched-item.done-item::after{content:'✓';position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#065f46;font-weight:900}
+.sched-item.now-item{animation:pulse 1.5s infinite,fadeUp 0.3s ease both}
+.s-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:rgba(255,255,255,0.55)}
+.s-time{font-size:10px;font-weight:700;color:var(--muted)}
+.s-name{font-size:13px;font-weight:800;color:var(--text)}
+.s-tag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;margin-top:2px;display:inline-block}
+.now-pill{font-size:9px;font-weight:900;background:#ede9fe;color:#7c3aed;padding:3px 8px;border-radius:10px;flex-shrink:0}
+
+/* FOCUS */
+.focus-wrap{background:linear-gradient(160deg,#4c1d95,#831843);min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 24px 100px;text-align:center;color:white}
+.focus-mascot{font-size:80px;animation:bounce 2s infinite;margin-bottom:16px}
+.focus-sess{font-size:17px;font-weight:800;margin-bottom:4px}
+.focus-phase-lbl{font-size:13px;opacity:0.7;font-weight:700;margin-bottom:16px}
+.focus-circle{width:220px;height:220px;border-radius:50%;border:4px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);margin:0 auto 24px}
+.focus-time{font-size:54px;font-weight:900;font-family:'Quicksand',sans-serif}
+.focus-state{font-size:13px;opacity:0.72;font-weight:700;margin-top:4px}
+.focus-btns{display:flex;gap:12px;margin-bottom:20px}
+.focus-btn{padding:13px 26px;border-radius:20px;font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.18s}
+.focus-btn:active{transform:scale(0.94)}
+.fb-primary{background:white;color:#4c1d95}
+.fb-secondary{background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35)}
+.focus-q{font-size:13px;opacity:0.72;font-weight:600;max-width:250px;line-height:1.55}
+
+/* ASSIGNMENTS */
+.assign-card{display:flex;align-items:flex-start;gap:11px;padding:13px;border-radius:16px;background:var(--bg);border:1px solid var(--border);margin-bottom:8px;animation:fadeUp 0.3s ease both}
+.a-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.a-sub{font-size:10px;font-weight:800;color:var(--muted)}
+.a-title{font-size:13px;font-weight:800;color:var(--text);margin:2px 0}
+.a-due{font-size:10px;font-weight:700}
+.a-bar{height:4px;border-radius:4px;background:var(--lav-light);margin-top:7px;overflow:hidden}
+.a-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--lav),var(--pink))}
+.a-pct{font-size:10px;color:var(--muted);font-weight:700;margin-top:3px}
+.pri-badge{font-size:9px;font-weight:900;padding:2px 8px;border-radius:9px}
+.fab{position:absolute;bottom:98px;right:16px;width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--lav-dark),var(--pink-dark));color:white;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px rgba(124,58,237,0.42);cursor:pointer;border:none;transition:all 0.18s;z-index:40}
+.fab:active{transform:scale(0.9)}
+
+/* MODAL */
+.modal-overlay{position:absolute;inset:0;background:rgba(30,27,75,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-sheet{background:var(--bg);border-radius:26px 26px 0 0;padding:22px 18px 36px;width:100%;animation:slideUp 0.3s ease}
+.modal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:17px;font-weight:900;color:var(--lav-dark);margin-bottom:14px}
+.form-grp{margin-bottom:12px}
+.form-lbl{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:0.6px}
+.form-inp{width:100%;padding:11px 13px;border-radius:13px;border:1.5px solid var(--border);background:var(--card);font-size:13px;font-weight:700;color:var(--text);font-family:'Nunito',sans-serif;outline:none}
+.form-inp:focus{border-color:var(--lav)}
+.pill-grp{display:flex;gap:7px}
+.pill-opt{padding:7px 13px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--card);transition:all 0.18s;font-family:'Nunito',sans-serif}
+.pill-opt.sel{background:linear-gradient(135deg,var(--lav),var(--pink));border-color:transparent;color:white}
+.submit-btn{width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,var(--lav-dark),var(--pink-dark));color:white;font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:8px}
+
+/* ALARM */
+.alarm-wrap{position:absolute;inset:0;background:linear-gradient(160deg,#1e1b4b,#4c1d95);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;color:white}
+.alarm-wrap::before{content:'✨';font-size:220px;position:absolute;top:-60px;left:-60px;opacity:0.04;animation:spin 12s linear infinite}
+.alarm-rings-row{display:flex;gap:9px;margin-bottom:20px}
+.a-ring-dot{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,0.3);animation:ringPulse 0.9s infinite}
+.a-ring-dot:nth-child(2){animation-delay:0.2s}
+.a-ring-dot:nth-child(3){animation-delay:0.4s}
+.alarm-mascot{font-size:90px;animation:wiggle 0.5s infinite;margin-bottom:6px}
+.alarm-clock{font-size:60px;font-weight:900;font-family:'Quicksand',sans-serif;letter-spacing:2px;margin:6px 0}
+.alarm-ttl{font-size:20px;font-weight:900;margin-bottom:4px}
+.alarm-sub{font-size:13px;opacity:0.75;font-weight:700;margin-bottom:28px}
+.alarm-btns{display:flex;flex-direction:column;gap:11px;width:100%;max-width:270px}
+.alarm-btn{padding:15px;border-radius:19px;font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.18s}
+.alarm-btn:active{transform:scale(0.95)}
+.ab-start{background:white;color:#4c1d95}
+.ab-snooze{background:rgba(255,255,255,0.16);color:white;border:1px solid rgba(255,255,255,0.38)}
+.ab-skip{background:transparent;color:rgba(255,255,255,0.48);border:1px solid rgba(255,255,255,0.2);font-size:12px;padding:11px}
+
+/* CONFETTI */
+.confetti-layer{position:absolute;inset:0;pointer-events:none;z-index:999;overflow:hidden}
+.cpc{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards}
+
+/* BOTTOM NAV */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:10px 0 22px;z-index:100}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 14px;border-radius:14px;transition:all 0.2s;background:transparent;border:none;color:var(--muted);font-family:'Nunito',sans-serif}
+.nav-btn.active{color:var(--lav-dark)}
+.nav-btn .ni{font-size:20px;transition:transform 0.2s}
+.nav-btn.active .ni{transform:scale(1.18)}
+.nav-lbl{font-size:9px;font-weight:800}
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="app">
+  <div class="phone-notch"></div>
+  <div class="screens-wrap">
+
+    <!-- ===== HOME ===== -->
+    <div class="screen active" id="scr-home">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <div class="greeting">Good morning ✨</div>
+            <div class="header-title">Future Focus<br>Timetable</div>
+            <div class="date-badge" id="today-badge">Monday · May 3</div>
+          </div>
+          <div class="mascot-big">🐰</div>
+        </div>
+      </div>
+
+      <div class="theme-bar">
+        <div class="theme-pill tp-lav" onclick="setTheme('lav')">💜 Lavender</div>
+        <div class="theme-pill tp-pink" onclick="setTheme('pink')">🌸 Pink</div>
+        <div class="theme-pill tp-blue" onclick="setTheme('blue')">💙 Blue</div>
+      </div>
+
+      <div class="section">
+        <div class="card countdown-card">
+          <div class="cd-label">⏱ Next Session</div>
+          <div class="cd-time" id="cd-time">0:00:00</div>
+          <div class="cd-name" id="cd-name">Loading...</div>
+          <div class="cd-bunny">🐰</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Today's Progress</div>
+        <div class="card">
+          <div class="ring-row" id="ring-row"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Hydration 💧</div>
+        <div class="card">
+          <div class="row-sb">
+            <span style="font-size:14px;font-weight:800;color:var(--text)">Daily Water Goal</span>
+            <span class="chip" id="water-chip">0 / 3L</span>
+          </div>
+          <div class="drop-grid" id="drop-grid"></div>
+          <div class="water-sub" id="water-sub">Stay hydrated! 💙</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Streak & Goals</div>
+        <div class="card">
+          <div class="streak-row">
+            <div>
+              <div class="streak-num" id="streak-n">7</div>
+              <div class="streak-sub">Day Coding Streak</div>
+              <div class="badge-sticker">🔥 On Fire!</div>
+            </div>
+            <div class="streak-flame">🔥</div>
+          </div>
+          <div style="margin-top:16px">
+            <div class="row-sb">
+              <span style="font-size:12px;font-weight:800">Weekly DSA Problems</span>
+              <span style="font-size:12px;font-weight:700;color:var(--lav-dark)">18 / 28</span>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:64%"></div></div>
+            <div class="bar-nums"><span>0</span><span>Goal: 28</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-bottom:0">
+        <div class="card quote-card">
+          <span class="quote-emoji" id="q-emoji">💜</span>
+          <div class="quote-txt" id="q-txt">You're building your future, one line of code at a time!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCHEDULE ===== -->
+    <div class="screen" id="scr-schedule">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <div class="greeting">Your daily plan 📋</div>
+            <div class="header-title">Schedule</div>
+            <div class="date-badge" id="sched-badge">Monday · Maths Today</div>
+          </div>
+          <div class="mascot-big">🧠</div>
+        </div>
+      </div>
+      <div class="section" id="sched-list" style="padding-bottom:4px"></div>
+    </div>
+
+    <!-- ===== FOCUS ===== -->
+    <div class="screen" id="scr-focus">
+      <div class="focus-wrap">
+        <div class="focus-mascot">🐰</div>
+        <div class="focus-sess" id="focus-sess">DSA Problem Solving</div>
+        <div class="focus-phase-lbl" id="focus-plbl">🍅 Pomodoro 1 / 4</div>
+        <div class="focus-circle">
+          <div>
+            <div class="focus-time" id="focus-tmr">25:00</div>
+            <div class="focus-state" id="focus-st">Ready to focus</div>
+          </div>
+        </div>
+        <div class="focus-btns">
+          <button class="focus-btn fb-primary" id="focus-start" onclick="toggleFocus()">▶ Start</button>
+          <button class="focus-btn fb-secondary" onclick="resetFocus()">↺ Reset</button>
+        </div>
+        <div class="focus-q" id="focus-q">Stay consistent! Each problem builds your foundation 🧠</div>
+      </div>
+    </div>
+
+    <!-- ===== ASSIGNMENTS ===== -->
+    <div class="screen" id="scr-assign">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <div class="greeting">Stay ahead! 🎯</div>
+            <div class="header-title">Assignments</div>
+            <div class="date-badge">Writing: 8:30–9:15 PM daily</div>
+          </div>
+          <div class="mascot-big">📝</div>
+        </div>
+      </div>
+      <div class="section" id="assign-list" style="padding-bottom:4px"></div>
+      <button class="fab" onclick="openModal()">+</button>
+    </div>
+
+    <!-- ALARM -->
+    <div class="alarm-wrap" id="alarm-wrap">
+      <div class="alarm-rings-row">
+        <div class="a-ring-dot"></div><div class="a-ring-dot"></div><div class="a-ring-dot"></div>
+      </div>
+      <div class="alarm-mascot">🐰</div>
+      <div class="alarm-clock" id="alarm-clock">5:45 AM</div>
+      <div class="alarm-ttl" id="alarm-ttl">DSA Study Time! 🧠</div>
+      <div class="alarm-sub" id="alarm-sub">Wake up & crush those concepts!</div>
+      <div class="alarm-btns">
+        <button class="alarm-btn ab-start" onclick="dismissAlarm()">🚀 Start Now</button>
+        <button class="alarm-btn ab-snooze" onclick="snoozeAlarm()">😴 Snooze 5 min</button>
+        <button class="alarm-btn ab-skip" onclick="skipAlarm()">Skip this session</button>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-handle"></div>
+        <div class="modal-title">📚 New Assignment</div>
+        <div class="form-grp">
+          <label class="form-lbl">Title</label>
+          <input class="form-inp" id="a-title" placeholder="e.g. Integration worksheet" type="text">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Subject</label>
+          <select class="form-inp" id="a-subj">
+            <option value="Maths">📐 Maths</option>
+            <option value="Chemistry">⚗️ Chemistry</option>
+            <option value="DLD">🔌 DLD</option>
+            <option value="IME">⚙️ IME</option>
+          </select>
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Due Date</label>
+          <input class="form-inp" id="a-due" type="date">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Priority</label>
+          <div class="pill-grp" id="pri-grp">
+            <div class="pill-opt sel" data-v="High" onclick="selPri(this)">🔴 High</div>
+            <div class="pill-opt" data-v="Medium" onclick="selPri(this)">🟡 Medium</div>
+            <div class="pill-opt" data-v="Low" onclick="selPri(this)">🟢 Low</div>
+          </div>
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Progress (%)</label>
+          <input class="form-inp" id="a-prog" type="number" min="0" max="100" value="0">
+        </div>
+        <button class="submit-btn" onclick="addAssign()">✨ Add Assignment</button>
+      </div>
+    </div>
+
+    <!-- CONFETTI -->
+    <div class="confetti-layer" id="conf-layer"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-s="home" onclick="goScreen('home',this)">
+      <div class="ni">🏠</div><div class="nav-lbl">Home</div>
+    </button>
+    <button class="nav-btn" data-s="schedule" onclick="goScreen('schedule',this)">
+      <div class="ni">📅</div><div class="nav-lbl">Schedule</div>
+    </button>
+    <button class="nav-btn" data-s="focus" onclick="goScreen('focus',this)">
+      <div class="ni">🎯</div><div class="nav-lbl">Focus</div>
+    </button>
+    <button class="nav-btn" data-s="assign" onclick="goScreen('assign',this)">
+      <div class="ni">📝</div><div class="nav-lbl">Tasks</div>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ---- DATA ----
+const SCHEDULE_DATA = [
+  {t:"5:30",d:15,name:"Wake Up + Water 💧",icon:"💧",bg:"#dbeafe",tag:"Morning",tc:"#1d4ed8",tagBg:"#dbeafe22"},
+  {t:"5:45",d:60,name:"DSA / Java Concepts",icon:"🧠",bg:"#ede9fe",tag:"Goal Learning",tc:"#7c3aed",tagBg:"#ede9fe99"},
+  {t:"6:45",d:15,name:"Quick Revision",icon:"⚡",bg:"#fce7f3",tag:"Review",tc:"#be185d",tagBg:"#fce7f399"},
+  {t:"7:00",d:540,name:"College 🏫",icon:"🏫",bg:"#d1fae5",tag:"Academic",tc:"#065f46",tagBg:"#d1fae599"},
+  {t:"16:30",d:60,name:"Rest & Recharge",icon:"☁️",bg:"#fef3c7",tag:"Break",tc:"#92400e",tagBg:"#fef3c799"},
+  {t:"17:30",d:90,name:"DSA Problem Solving",icon:"🧠",bg:"#ede9fe",tag:"Goal Learning",tc:"#7c3aed",tagBg:"#ede9fe99"},
+  {t:"19:00",d:60,name:"Python / Java Programming",icon:"🐍",bg:"#d1fae5",tag:"Goal Learning",tc:"#065f46",tagBg:"#d1fae599"},
+  {t:"20:00",d:30,name:"CP Practice",icon:"🏆",bg:"#fce7f3",tag:"Goal Learning",tc:"#be185d",tagBg:"#fce7f399"},
+  {t:"20:30",d:45,name:"Assignment Writing ✍️",icon:"✍️",bg:"#fef3c7",tag:"Academic",tc:"#92400e",tagBg:"#fef3c799"},
+  {t:"21:15",d:15,name:"Light Revision",icon:"📖",bg:"#ede9fe",tag:"Review",tc:"#7c3aed",tagBg:"#ede9fe99"},
+  {t:"21:15",d:15,name:"Wind Down 🌙",icon:"🌙",bg:"#1e1b4b",tag:"Sleep",tc:"#818cf8",tagBg:"#818cf822",dark:true},
+  {t:"21:30",d:480,name:"Sleep 😴",icon:"⭐",bg:"#1e1b4b",tag:"Rest",tc:"#818cf8",tagBg:"#818cf822",dark:true},
+];
+
+const ACAD = ["Maths","DLD","Chemistry","IME","Maths","DLD"];
+const QUOTES = [
+  {e:"💜",t:"You're building your future, one line of code at a time!"},
+  {e:"🌟",t:"Small progress is still progress! Keep going!"},
+  {e:"🔥",t:"Stay consistent! Legends are built in the daily grind."},
+  {e:"🧠",t:"Every DSA problem solved brings your dream job closer!"},
+  {e:"🚀",t:"You showed up today. That already makes you better!"},
+  {e:"💎",t:"Your future self is watching. Make them proud today!"},
+];
+const FQ = [
+  "Stay consistent! Each problem builds your foundation 🧠",
+  "You're in the zone. Future you will thank you! 💜",
+  "Deep work = deep results. Keep going! 🔥",
+  "No distractions. Just you and the problem. ⚡",
+  "This session shapes your career. Stay locked in! 🎯",
+];
+
+let waterCount = 0;
+let done = new Set();
+let assigns = [
+  {title:"Integration Problems Ch.5",subj:"Maths",due:"2026-05-07",pri:"High",prog:30},
+  {title:"Combinational Circuits Lab Report",subj:"DLD",due:"2026-05-10",pri:"Medium",prog:60},
+  {title:"Acid-Base Titration Report",subj:"Chemistry",due:"2026-05-15",pri:"Low",prog:10},
+];
+let focusOn=false,focusInt=null,focusSecs=25*60,pomodoros=0;
+
+// ---- INIT ----
+function init(){
+  updateHeader();
+  buildRings();
+  buildWater();
+  buildSchedule();
+  buildAssigns();
+  rotateQuote();
+  startCountdown();
+  setTimeout(showAlarm, 2500);
+}
+
+function pad(n){return String(n).padStart(2,'0')}
+function getDayIdx(){const d=new Date().getDay();return d===0?6:d-1}
+function getAcad(){return ACAD[getDayIdx()]}
+function getDayName(){return ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][getDayIdx()]}
+function toMins(t){const[h,m]=t.split(':').map(Number);return h*60+m}
+
+function updateHeader(){
+  const dn=getDayName();
+  const dt=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('today-badge').textContent=`${dn} · ${dt}`;
+  document.getElementById('sched-badge').textContent=`${dn} · ${getAcad()} Today`;
+}
+
+// ---- RINGS ----
+function buildRings(){
+  const items=[
+    {l:"DSA",p:65,c:"#7c3aed"},
+    {l:"Code",p:40,c:"#be185d"},
+    {l:"Study",p:80,c:"#065f46"},
+    {l:"Tasks",p:55,c:"#1d4ed8"},
+  ];
+  const R=52,cx=36,cy=36,sw=7,circ=2*Math.PI*R;
+  document.getElementById('ring-row').innerHTML=items.map(it=>`
+    <div class="ring-item">
+      <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#f0ecff" stroke-width="${sw}"/>
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${it.c}" stroke-width="${sw}"
+          stroke-dasharray="${circ}" stroke-dashoffset="${circ-(circ*it.p/100)}"
+          stroke-linecap="round" style="transition:stroke-dashoffset 1.2s ease"/>
+      </svg>
+      <div class="ring-pct" style="color:${it.c}">${it.p}%</div>
+      <div class="ring-lbl">${it.l}</div>
+    </div>`).join('');
+}
+
+// ---- WATER ----
+function buildWater(){
+  const total=12;
+  document.getElementById('drop-grid').innerHTML=Array.from({length:total},(_,i)=>
+    `<div class="drop ${i<waterCount?'lit':''}" onclick="tapDrop(${i})">💧</div>`).join('');
+  const ml=waterCount*250;
+  document.getElementById('water-chip').textContent=`${(ml/1000).toFixed(2).replace(/\.?0+$/,'')}L / 3L`;
+  const msgs=["Stay hydrated! 💙","Great start! 💧","Halfway there! 🌊","Almost at goal! 💦","Amazing! Goal reached! 🏆"];
+  document.getElementById('water-sub').textContent=msgs[Math.min(Math.floor(waterCount/3),4)];
+}
+function tapDrop(i){
+  waterCount=i<waterCount?i:i+1;
+  buildWater();
+  if(waterCount>=12)confetti();
+}
+
+// ---- SCHEDULE ----
+function buildSchedule(){
+  const now=new Date();
+  const nm=now.getHours()*60+now.getMinutes();
+  const acad=getAcad();
+  let html='';
+  SCHEDULE_DATA.forEach((s,i)=>{
+    const sm=toMins(s.t);
+    const em=sm+s.d;
+    const isDone=done.has(i)||(em<nm&&s.d<400);
+    const isNow=!isDone&&sm<=nm&&em>nm;
+    const h=Math.floor(sm/60),m=sm%60;
+    const ampm=h<12?'AM':'PM';
+    const dh=h>12?h-12:h===0?12:h;
+    const dname=s.name+(s.name.includes('Academic')?` — ${acad}`:'');
+    const delay=i*0.05;
+    html+=`<div class="sched-item ${isDone?'done-item':''} ${isNow?'now-item':''}"
+      style="background:${s.bg};animation-delay:${delay}s" onclick="tapSched(${i})">
+      <div class="s-ico">${s.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="s-time" style="${s.dark?'color:rgba(255,255,255,0.6)':''}">${dh}:${pad(m)} ${ampm} · ${s.d<60?s.d+' min':s.d===60?'1 hr':(s.d/60).toFixed(1)+' hrs'}</div>
+        <div class="s-name" style="${s.dark?'color:white':''}">${dname}</div>
+        <div class="s-tag" style="background:${s.tagBg};color:${s.tc}">${s.tag}</div>
+      </div>
+      ${isNow?'<div class="now-pill">NOW</div>':''}
+    </div>`;
+  });
+  document.getElementById('sched-list').innerHTML=html;
+}
+function tapSched(i){
+  if(done.has(i)){done.delete(i)}else{done.add(i);confetti()}
+  buildSchedule();
+}
+
+// ---- COUNTDOWN ----
+function startCountdown(){
+  updateCd();setInterval(updateCd,1000);
+}
+function updateCd(){
+  const now=new Date();
+  const nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  const sessions=[
+    {m:5*60+45,name:"DSA / Java Concepts 🧠"},
+    {m:17*60+30,name:"DSA Problem Solving 🧠"},
+    {m:19*60,name:"Python / Java Programming 🐍"},
+    {m:20*60,name:"CP Practice 🏆"},
+    {m:20*60+30,name:"Assignment Writing ✍️"},
+    {m:21*60+15,name:"Light Revision 📖"},
+  ];
+  let next=null,minD=Infinity;
+  sessions.forEach(s=>{let d=s.m-nm;if(d<0)d+=24*60;if(d<minD){minD=d;next=s}});
+  const h=Math.floor(minD/60),m=Math.floor(minD%60),s=Math.floor((minD%1)*60);
+  document.getElementById('cd-time').textContent=`${h}:${pad(m)}:${pad(s)}`;
+  document.getElementById('cd-name').textContent=next.name;
+}
+
+// ---- QUOTE ----
+function rotateQuote(){
+  const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('q-emoji').textContent=q.e;
+  document.getElementById('q-txt').textContent=q.t;
+  setTimeout(rotateQuote,9000);
+}
+
+// ---- FOCUS ----
+function toggleFocus(){
+  if(focusOn){
+    clearInterval(focusInt);focusOn=false;
+    document.getElementById('focus-start').textContent='▶ Resume';
+  } else {
+    focusOn=true;
+    document.getElementById('focus-start').textContent='⏸ Pause';
+    document.getElementById('focus-st').textContent=focusSecs>5*60?'Deep Focus 🎯':'Break Time ☕';
+    document.getElementById('focus-q').textContent=FQ[Math.floor(Math.random()*FQ.length)];
+    focusInt=setInterval(()=>{
+      if(--focusSecs<=0){
+        pomodoros++;
+        const brk=pomodoros%2===0;
+        focusSecs=brk?5*60:25*60;
+        document.getElementById('focus-st').textContent=brk?'Break! ☕':'Focus! 🎯';
+        document.getElementById('focus-plbl').textContent=`🍅 Pomodoro ${Math.ceil(pomodoros/2)} / 4`;
+        if(!brk)confetti();
+      }
+      const m=Math.floor(focusSecs/60),s=focusSecs%60;
+      document.getElementById('focus-tmr').textContent=`${pad(m)}:${pad(s)}`;
+    },1000);
+  }
+}
+function resetFocus(){
+  clearInterval(focusInt);focusOn=false;focusSecs=25*60;pomodoros=0;
+  document.getElementById('focus-tmr').textContent='25:00';
+  document.getElementById('focus-start').textContent='▶ Start';
+  document.getElementById('focus-st').textContent='Ready to focus';
+}
+
+// ---- ASSIGNS ----
+function buildAssigns(){
+  const pc={High:['#fee2e2','#991b1b'],Medium:['#fef3c7','#92400e'],Low:['#d1fae5','#065f46']};
+  const si={Maths:'📐',Chemistry:'⚗️',DLD:'🔌',IME:'⚙️'};
+  const today=new Date();
+  const sorted=[...assigns].sort((a,b)=>{const p={High:0,Medium:1,Low:2};return p[a.pri]-p[b.pri]});
+  document.getElementById('assign-list').innerHTML=sorted.length?sorted.map((a,i)=>{
+    const due=new Date(a.due);
+    const diff=Math.ceil((due-today)/(86400000));
+    const urgTxt=diff<=0?'🚨 Due today!':diff<=2?'🚨 Due soon!':diff<=5?`📅 ${diff} days left`:`📅 ${diff} days`;
+    const urgC=diff<=2?'#991b1b':diff<=5?'#92400e':'#4b4569';
+    const [bg,fg]=pc[a.pri];
+    return`<div class="assign-card" style="animation-delay:${i*0.07}s">
+      <div class="a-dot" style="background:${fg}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="a-sub">${si[a.subj]||'📚'} ${a.subj}</div>
+        <div class="a-title">${a.title}</div>
+        <div class="row-sb" style="margin-top:4px">
+          <div class="a-due" style="color:${urgC}">${urgTxt}</div>
+          <div class="pri-badge" style="background:${bg};color:${fg}">${a.pri}</div>
+        </div>
+        <div class="a-bar"><div class="a-bar-fill" style="width:${a.prog}%"></div></div>
+        <div class="a-pct">${a.prog}% complete</div>
+      </div>
+    </div>`}).join(''):'<div style="text-align:center;padding:32px;color:var(--muted);font-weight:800">No assignments! 🎉</div>';
+}
+
+function openModal(){document.getElementById('modal-overlay').style.display='flex'}
+function closeModal(e){if(e.target.id==='modal-overlay')document.getElementById('modal-overlay').style.display='none'}
+function selPri(el){document.querySelectorAll('#pri-grp .pill-opt').forEach(p=>p.classList.remove('sel'));el.classList.add('sel')}
+function addAssign(){
+  const t=document.getElementById('a-title').value.trim();
+  if(!t){document.getElementById('a-title').style.borderColor='#fca5a5';return}
+  const pri=document.querySelector('#pri-grp .pill-opt.sel')?.dataset.v||'Medium';
+  const due=document.getElementById('a-due').value||new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+  assigns.push({title:t,subj:document.getElementById('a-subj').value,due,pri,prog:Math.min(100,Math.max(0,parseInt(document.getElementById('a-prog').value)||0))});
+  document.getElementById('modal-overlay').style.display='none';
+  document.getElementById('a-title').value='';
+  document.getElementById('a-prog').value='0';
+  document.getElementById('a-title').style.borderColor='';
+  buildAssigns();
+  confetti();
+}
+
+// ---- ALARM ----
+function showAlarm(){
+  const now=new Date();
+  document.getElementById('alarm-clock').textContent=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  document.getElementById('alarm-wrap').style.display='flex';
+}
+function dismissAlarm(){
+  document.getElementById('alarm-wrap').style.display='none';
+  confetti();
+  goScreen('focus',document.querySelector('[data-s="focus"]'));
+}
+function snoozeAlarm(){
+  document.getElementById('alarm-wrap').style.display='none';
+  setTimeout(showAlarm,300000);
+}
+function skipAlarm(){document.getElementById('alarm-wrap').style.display='none'}
+
+// ---- CONFETTI ----
+function confetti(){
+  const wrap=document.getElementById('conf-layer');
+  const cols=['#c4b5fd','#f9a8d4','#93c5fd','#6ee7b7','#fcd34d','#fca5a5','#a5f3fc'];
+  for(let i=0;i<50;i++){
+    const el=document.createElement('div');
+    el.className='cpc';
+    el.style.cssText=`left:${Math.random()*100}%;top:-12px;background:${cols[i%cols.length]};
+      transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
+      animation:confettiFall ${1.4+Math.random()*1.6}s ${Math.random()*0.6}s ease forwards;
+      border-radius:${Math.random()>0.5?'50%':'3px'}`;
+    wrap.appendChild(el);
+    setTimeout(()=>el.remove(),3200);
+  }
+}
+
+// ---- NAV ----
+function goScreen(name,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('scr-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='schedule')buildSchedule();
+  if(name==='assign')buildAssigns();
+  // scroll to top
+  document.getElementById('scr-'+name).scrollTop=0;
+}
+
+// ---- THEME ----
+function setTheme(t){
+  const themes={
+    lav:{bg:'#faf8ff',l:'#ede9fe',d:'#7c3aed',p:'#f9a8d4',bd:'rgba(167,139,250,0.2)'},
+    pink:{bg:'#fff8fc',l:'#fce7f3',d:'#be185d',p:'#c084fc',bd:'rgba(249,168,212,0.25)'},
+    blue:{bg:'#f8faff',l:'#dbeafe',d:'#1d4ed8',p:'#93c5fd',bd:'rgba(147,197,253,0.25)'},
+  };
+  const th=themes[t];
+  if(!th)return;
+  const r=document.documentElement.style;
+  r.setProperty('--bg',th.bg);
+  r.setProperty('--lav-light',th.l);
+  r.setProperty('--lav-dark',th.d);
+  r.setProperty('--pink',th.p);
+  r.setProperty('--border',th.bd);
+  r.setProperty('--accent1',th.d);
+}
+
+init();
+</script>
+</body>
+</html>
